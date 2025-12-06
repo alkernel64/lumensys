@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>LUMEN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        *:focus {
+            outline: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .illusion-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(0, 255, 0, 0.15) 0%, transparent 50%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.08) 2px,
+                    rgba(0, 255, 0, 0.08) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.05) 2px,
+                    rgba(0, 255, 0, 0.05) 4px
+                );
+            animation: rotateIllusion 15s linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes rotateIllusion {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+            50% {
+                transform: rotate(180deg) scale(1.2);
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        .illusion-spiral {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border: 3px solid rgba(0, 255, 0, 0.4);
+            border-radius: 50%;
+            animation: spiralRotate 4s linear infinite;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.3);
+        }
+
+        .illusion-spiral::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            border: 3px solid rgba(0, 255, 0, 0.5);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);
+        }
+
+        .illusion-spiral::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            border: 3px solid rgba(0, 255, 0, 0.5);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);
+        }
+
+        .illusion-spiral-inner {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            border-radius: 50%;
+            animation: spiralRotateReverse 3s linear infinite;
+        }
+
+        @keyframes spiralRotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spiralRotateReverse {
+            0% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+        }
+
+        .hacker-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .terminal-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 400px;
+            max-height: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(0, 255, 0, 0.5);
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            z-index: 5;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            opacity: 0;
+            animation: fadeInLine 0.5s ease forwards;
+        }
+
+        @keyframes fadeInLine {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .terminal-prompt {
+            color: #00ff00;
+        }
+
+        .terminal-command {
+            color: #ffffff;
+        }
+
+        .terminal-output {
+            color: #00ffff;
+            margin-left: 20px;
+        }
+
+        .terminal-error {
+            color: #ff0000;
+        }
+
+        .terminal-success {
+            color: #00ff00;
+        }
+
+        .code-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .hex-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(0, 255, 0, 0.1) 30px,
+                    rgba(0, 255, 0, 0.1) 31px
+                ),
+                repeating-linear-gradient(
+                    60deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(0, 255, 0, 0.1) 30px,
+                    rgba(0, 255, 0, 0.1) 31px
+                ),
+                repeating-linear-gradient(
+                    120deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(0, 255, 0, 0.1) 30px,
+                    rgba(0, 255, 0, 0.1) 31px
+                );
+            animation: gridMove 20s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(30px, 30px);
+            }
+        }
+
+        .click-me-button {
+            position: relative;
+            z-index: 10;
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            cursor: pointer;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .click-me-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .click-me-button:hover::before {
+            left: 100%;
+        }
+
+        .click-me-button:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .click-me-button:active {
+            transform: scale(0.98);
+        }
+
+        .main-content {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .main-content.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(145deg, rgba(25, 25, 40, 0.95) 0%, rgba(15, 15, 25, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 35px 45px;
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 480px;
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 25px 60px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profile-image {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(173, 216, 230, 0.3);
+            display: block;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.05);
+        }
+
+        .title {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .subtitle-container {
+            height: 35px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(173, 216, 230, 0.9);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(173, 216, 230, 0.4);
+            white-space: nowrap;
+            width: 100%;
+            text-align: center;
+            min-height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .subtitle::after {
+            content: '|';
+            animation: blink 1s infinite;
+            margin-left: 5px;
+            color: rgba(173, 216, 230, 0.95);
+        }
+
+        @keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0;
+            }
+        }
+
+        .title:hover {
+            transform: scale(1.03);
+        }
+
+        .donation-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .audio-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .audio-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid rgba(173, 216, 230, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .audio-container:hover {
+            border-color: rgba(173, 216, 230, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .audio-title {
+            color: rgba(173, 216, 230, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            margin-bottom: 0;
+        }
+
+        .audio-player {
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .audio-player audio {
+            width: 100%;
+            outline: none;
+            height: 32px;
+        }
+
+        .audio-player audio::-webkit-media-controls-panel {
+            background-color: rgba(20, 20, 30, 0.9);
+            border-radius: 10px;
+        }
+
+        .audio-player audio::-webkit-media-controls-play-button {
+            background-color: rgba(173, 216, 230, 0.3);
+            border-radius: 50%;
+        }
+
+        .donation-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .btc-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 14px 20px;
+            border: 1px solid rgba(173, 216, 230, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btc-container:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(173, 216, 230, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btc-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 2px 8px rgba(173, 216, 230, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .btc-container:hover .btc-icon {
+            transform: scale(1.05);
+        }
+
+        .btc-address {
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            font-size: 16px;
+            letter-spacing: 1px;
+            word-break: break-all;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            display: none;
+        }
+
+        .btc-address.show {
+            display: block;
+            animation: fadeInText 0.5s ease-out;
+        }
+
+        @keyframes fadeInText {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btc-placeholder {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .btc-container:hover .btc-placeholder {
+            color: #87CEEB;
+        }
+
+        .copy-hint {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btc-container:hover .copy-hint {
+            opacity: 1;
+        }
+
+        .discord-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 14px 20px;
+            border: 1px solid rgba(88, 101, 242, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .discord-container:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(88, 101, 242, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .discord-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #5865F2 0%, #7289da 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 2px 8px rgba(88, 101, 242, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .discord-container:hover .discord-icon {
+            transform: scale(1.05);
+        }
+
+        .discord-link {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+            font-size: 16px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .discord-container:hover .discord-link {
+            color: #7289da;
+        }
+
+        .link-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(90deg);
+            background: linear-gradient(145deg, rgba(20, 20, 30, 0.98) 0%, rgba(10, 10, 20, 0.98) 100%);
+            backdrop-filter: blur(30px);
+            padding: 40px 60px;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.9),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 2px 4px rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            display: none;
+            max-width: 90%;
+            text-align: center;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .link-display.show {
+            display: block;
+            animation: popIn3d 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn3d {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) rotateX(90deg) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) rotateX(0deg) scale(1);
+            }
+        }
+
+        .link-display-content {
+            color: #ffffff;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin-bottom: 20px;
+        }
+
+        .link-display-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 10px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .link-display-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .toast-notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(145deg, rgba(20, 20, 30, 0.95) 0%, rgba(15, 15, 25, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 20px 35px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 2px 4px rgba(255, 255, 255, 0.1);
+            z-index: 2000;
+            display: none;
+            transform-style: preserve-3d;
+            max-width: 300px;
+        }
+
+        .toast-notification.show {
+            display: block;
+            animation: toastSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(400px) rotateY(-90deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) rotateY(0deg);
+            }
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toast-lumen {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 3px;
+        }
+
+        .toast-text {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .toast-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .toast-icon.bitcoin {
+            background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+            box-shadow: 0 4px 15px rgba(173, 216, 230, 0.4);
+        }
+
+        .toast-icon.discord {
+            background: linear-gradient(135deg, #5865F2 0%, #7289da 100%);
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .btc-container {
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            }
+
+            .container {
+                padding: 20px 25px;
+                margin: 15px;
+                max-width: calc(100% - 30px);
+                border-radius: 15px;
+            }
+
+            .profile-image {
+                width: 110px;
+                height: 110px;
+                margin-bottom: 15px;
+            }
+
+            .title {
+                font-size: 38px;
+                letter-spacing: 3px;
+                margin-bottom: 12px;
+            }
+
+            .subtitle-container {
+                height: 28px;
+                margin-bottom: 18px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .btc-container,
+            .discord-container {
+                flex-direction: column;
+                gap: 10px;
+                padding: 14px 18px;
+                min-height: 60px;
+                touch-action: manipulation;
+            }
+
+            .btc-icon,
+            .discord-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+            }
+
+            .btc-address,
+            .discord-link {
+                font-size: 14px;
+                word-break: break-all;
+            }
+
+            .audio-container {
+                padding: 14px 18px;
+            }
+
+            .audio-player {
+                max-width: 100%;
+            }
+
+            .audio-player audio {
+                height: 40px;
+            }
+
+            .donation-label {
+                font-size: 11px;
+                margin-bottom: 10px;
+            }
+
+            .toast-notification {
+                top: env(safe-area-inset-top, 20px);
+                right: 20px;
+                left: 20px;
+                max-width: none;
+                padding: 15px 20px;
+                border-radius: 12px;
+            }
+
+            .click-me-button {
+                padding: 18px 50px;
+                font-size: 20px;
+                min-height: 56px;
+                touch-action: manipulation;
+            }
+
+            .terminal-container {
+                display: none;
+            }
+
+            .link-display {
+                padding: 30px 40px;
+                margin: 20px;
+                max-width: calc(100% - 40px);
+                border-radius: 20px;
+            }
+
+            .link-display-content {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            .link-display-close {
+                padding: 12px 25px;
+                font-size: 14px;
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 18px 20px;
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+
+            .profile-image {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 12px;
+            }
+
+            .title {
+                font-size: 32px;
+                letter-spacing: 2px;
+                margin-bottom: 10px;
+            }
+
+            .subtitle-container {
+                height: 26px;
+                margin-bottom: 15px;
+            }
+
+            .subtitle {
+                font-size: 11px;
+            }
+
+            .btc-container,
+            .discord-container {
+                padding: 12px 16px;
+                gap: 8px;
+            }
+
+            .btc-icon,
+            .discord-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+
+            .btc-address,
+            .discord-link {
+                font-size: 13px;
+            }
+
+            .btc-placeholder {
+                font-size: 14px;
+            }
+
+            .donation-label {
+                font-size: 10px;
+                margin-bottom: 8px;
+            }
+
+            .click-me-button {
+                padding: 16px 40px;
+                font-size: 18px;
+                letter-spacing: 2px;
+            }
+
+            .link-display {
+                padding: 25px 30px;
+                margin: 15px;
+                max-width: calc(100% - 30px);
+            }
+
+            .link-display-content {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 375px) {
+            .container {
+                padding: 15px 18px;
+                margin: 8px;
+            }
+
+            .profile-image {
+                width: 90px;
+                height: 90px;
+            }
+
+            .title {
+                font-size: 28px;
+                letter-spacing: 1.5px;
+            }
+
+            .subtitle {
+                font-size: 10px;
+            }
+
+            .btc-container,
+            .discord-container {
+                padding: 10px 14px;
+            }
+
+            .btc-address,
+            .discord-link {
+                font-size: 12px;
+            }
+        }
+
+        /* iPhone Landscape */
+        @media (max-width: 896px) and (orientation: landscape) {
+            .container {
+                padding: 15px 25px;
+                margin: 10px auto;
+                max-width: 500px;
+            }
+
+            .profile-image {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 10px;
+            }
+
+            .title {
+                font-size: 30px;
+                margin-bottom: 8px;
+            }
+
+            .subtitle-container {
+                height: 24px;
+                margin-bottom: 12px;
+            }
+
+            .donation-section {
+                margin-top: 20px;
+                padding-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="preloader" id="preloader">
+        <div class="illusion-bg"></div>
+        <div class="hex-grid"></div>
+        <div class="illusion-spiral">
+            <div class="illusion-spiral-inner"></div>
+        </div>
+        <canvas class="hacker-canvas" id="hackerCanvas"></canvas>
+        <div class="terminal-container" id="terminalContainer"></div>
+        <button class="click-me-button" onclick="startExperience()">Click Me</button>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <canvas id="matrix-canvas"></canvas>
+        <canvas id="particle-canvas"></canvas>
+        
+        <div class="container">
+        <img src="7fcfa12b83e40a352de9b9bb9dde3247.jpg" alt="Profile" class="profile-image" onclick="window.location.href='forum.html'">
+        <h1 class="title">LUMEN</h1>
+        
+        <div class="subtitle-container">
+            <div class="subtitle" id="typingText"></div>
+        </div>
+        
+        <div class="donation-section">
+            <div class="donation-label">Bitcoin Donation</div>
+            <div class="btc-container" onclick="showBtcAddress()">
+                <div class="btc-icon">₿</div>
+                <div>
+                    <div class="btc-placeholder" id="btcPlaceholder">Click to view Bitcoin Address</div>
+                    <div class="btc-address" id="btcAddress">bc1qj3dfzn7la7yzfzejqzsanha28h7aqssqw0ycy4</div>
+                    <div class="copy-hint">Click to view</div>
+                </div>
+            </div>
+            
+            <div class="donation-label" style="margin-top: 40px;">Discord</div>
+            <div class="discord-container" onclick="openDiscord()">
+                <div class="discord-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="discord-link" id="discordLink">Click to view Discord</div>
+                    <div class="copy-hint">Click to view</div>
+                </div>
+            </div>
+        </div>
+
+        <audio id="audioPlayer" loop style="display: none;">
+            <source src="focus.mp3" type="audio/mpeg">
+        </audio>
+
+        <div class="link-display" id="linkDisplay">
+            <div class="link-display-content" id="linkDisplayContent"></div>
+            <button class="link-display-close" onclick="closeLinkDisplay()">Close</button>
+        </div>
+        </div>
+    </div>
+
+    <div class="toast-notification" id="toastNotification">
+        <div class="toast-content">
+            <div class="toast-icon" id="toastIcon">₿</div>
+            <div>
+                <div class="toast-lumen">LUMEN</div>
+                <div class="toast-text" id="toastText">COPY BITCOIN</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                if (mouse.x !== null && mouse.y !== null) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 150) {
+                        const force = (150 - distance) / 150;
+                        this.vx -= (dx / distance) * force * 0.02;
+                        this.vy -= (dy / distance) * force * 0.02;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            // Reduce particle count on mobile devices for better performance
+            const isMobile = window.innerWidth <= 768;
+            const divisor = isMobile ? 25000 : 15000;
+            const particleCount = Math.floor((canvas.width * canvas.height) / divisor);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 120) {
+                        const opacity = (120 - distance) / 120 * 0.3;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            drawConnections();
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        // Touch events for mobile devices
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        // Matrix Rain for main content
+        const matrixCanvas = document.getElementById('matrix-canvas');
+        const matrixCtx = matrixCanvas.getContext('2d');
+        
+        // Matrix Rain Effect for main content - declare variables first
+        const matrixCharsMain = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const matrixCharsArray = matrixCharsMain.split('');
+        // Use larger font size on mobile for better performance (fewer columns)
+        const isMobileDevice = window.innerWidth <= 768;
+        const matrixFontSize = isMobileDevice ? 20 : 16;
+        
+        // Initialize matrixDrops before using it
+        let matrixDrops = [];
+        
+        function resizeMatrixCanvas() {
+            matrixCanvas.width = window.innerWidth;
+            matrixCanvas.height = window.innerHeight;
+            // Recalculate matrix columns on resize
+            const isMobileDeviceResize = window.innerWidth <= 768;
+            const newFontSize = isMobileDeviceResize ? 20 : 16;
+            const newColumns = Math.floor(matrixCanvas.width / newFontSize);
+            
+            // Resize matrixDrops array
+            while (matrixDrops.length < newColumns) {
+                matrixDrops.push(Math.random() * -100);
+            }
+            while (matrixDrops.length > newColumns) {
+                matrixDrops.pop();
+            }
+        }
+        
+        // Initialize matrixDrops array
+        resizeMatrixCanvas();
+        window.addEventListener('resize', resizeMatrixCanvas);
+
+        function drawMatrixRain() {
+            matrixCtx.fillStyle = 'rgba(10, 10, 10, 0.04)';
+            matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            
+            const isMobileDevice = window.innerWidth <= 768;
+            const currentFontSize = isMobileDevice ? 20 : 16;
+            matrixCtx.font = currentFontSize + 'px monospace';
+            
+            for (let i = 0; i < matrixDrops.length; i++) {
+                const text = matrixCharsArray[Math.floor(Math.random() * matrixCharsArray.length)];
+                const x = i * currentFontSize;
+                const y = matrixDrops[i] * currentFontSize;
+                
+                // Gradient effect - brighter at top
+                const opacity = Math.random() * 0.5 + 0.3;
+                matrixCtx.fillStyle = `rgba(0, 255, 0, ${opacity})`;
+                matrixCtx.fillText(text, x, y);
+                
+                if (y > matrixCanvas.height && Math.random() > 0.975) {
+                    matrixDrops[i] = 0;
+                }
+                matrixDrops[i]++;
+            }
+        }
+
+        let matrixAnimationId;
+        function animateMatrix() {
+            drawMatrixRain();
+            matrixAnimationId = requestAnimationFrame(animateMatrix);
+        }
+
+        // Don't start animations until preloader is clicked
+        // initParticles();
+        // animate();
+        // animateMatrix();
+
+        // Hacker Canvas Effects
+        const hackerCanvas = document.getElementById('hackerCanvas');
+        const hackerCtx = hackerCanvas.getContext('2d');
+        
+        function resizeHackerCanvas() {
+            hackerCanvas.width = window.innerWidth;
+            hackerCanvas.height = window.innerHeight;
+        }
+        
+        resizeHackerCanvas();
+        window.addEventListener('resize', resizeHackerCanvas);
+
+        // Matrix Rain Effect
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const matrixChars = chars.split('');
+        const fontSize = 14;
+        const columns = hackerCanvas.width / fontSize;
+        const drops = [];
+        
+        for (let x = 0; x < columns; x++) {
+            drops[x] = Math.random() * -100;
+        }
+
+        function drawMatrix() {
+            hackerCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            hackerCtx.fillRect(0, 0, hackerCanvas.width, hackerCanvas.height);
+            
+            hackerCtx.fillStyle = '#00ff00';
+            hackerCtx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+                
+                hackerCtx.fillStyle = `rgba(0, 255, 0, ${Math.random() * 0.5 + 0.5})`;
+                hackerCtx.fillText(text, x, y);
+                
+                if (y > hackerCanvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        function animateHacker() {
+            drawMatrix();
+            requestAnimationFrame(animateHacker);
+        }
+
+        animateHacker();
+
+        // Terminal Code Animation
+        const terminalContainer = document.getElementById('terminalContainer');
+        
+        // Declare terminal variables first to avoid initialization errors
+        let currentLineIndex = 0;
+        let terminalInterval;
+        let terminalTimeouts = [];
+        
+        const terminalLines = [
+            { text: 'root@lumen:~$ ', type: 'prompt', delay: 0 },
+            { text: 'sudo access_granted', type: 'command', delay: 500 },
+            { text: '[OK] Access granted', type: 'success', delay: 1000 },
+            { text: 'root@lumen:~$ ', type: 'prompt', delay: 1500 },
+            { text: 'scan_network --deep', type: 'command', delay: 2000 },
+            { text: 'Scanning...', type: 'output', delay: 2500 },
+            { text: 'Found 127.0.0.1', type: 'output', delay: 3000 },
+            { text: 'root@lumen:~$ ', type: 'prompt', delay: 3500 },
+            { text: 'decrypt --algorithm=AES256', type: 'command', delay: 4000 },
+            { text: 'Decryption in progress...', type: 'output', delay: 4500 },
+            { text: '[SUCCESS] System unlocked', type: 'success', delay: 5000 },
+            { text: 'root@lumen:~$ ', type: 'prompt', delay: 5500 },
+            { text: 'init_lumen_system', type: 'command', delay: 6000 },
+            { text: 'Initializing...', type: 'output', delay: 6500 },
+            { text: 'Loading modules...', type: 'output', delay: 7000 },
+            { text: '[READY] System online', type: 'success', delay: 7500 }
+        ];
+
+        function addTerminalLine(line) {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'terminal-line';
+            
+            if (line.type === 'prompt') {
+                lineDiv.innerHTML = `<span class="terminal-prompt">${line.text}</span>`;
+            } else if (line.type === 'command') {
+                lineDiv.innerHTML = `<span class="terminal-command">${line.text}</span>`;
+            } else if (line.type === 'output') {
+                lineDiv.innerHTML = `<span class="terminal-output">${line.text}</span>`;
+            } else if (line.type === 'success') {
+                lineDiv.innerHTML = `<span class="terminal-success">${line.text}</span>`;
+            } else if (line.type === 'error') {
+                lineDiv.innerHTML = `<span class="terminal-error">${line.text}</span>`;
+            }
+            
+            terminalContainer.appendChild(lineDiv);
+            
+            // Auto scroll
+            terminalContainer.scrollTop = terminalContainer.scrollHeight;
+            
+            // Limit lines to prevent overflow
+            if (terminalContainer.children.length > 15) {
+                terminalContainer.removeChild(terminalContainer.firstChild);
+            }
+        }
+
+        function startTerminalAnimation() {
+            function processNextLine() {
+                if (currentLineIndex < terminalLines.length) {
+                    const line = terminalLines[currentLineIndex];
+                    const timeoutId = setTimeout(() => {
+                        addTerminalLine(line);
+                        currentLineIndex++;
+                        if (currentLineIndex < terminalLines.length) {
+                            processNextLine();
+                        } else {
+                            // Loop back after a delay
+                            const loopTimeout = setTimeout(() => {
+                                terminalContainer.innerHTML = '';
+                                currentLineIndex = 0;
+                                processNextLine();
+                            }, 2000);
+                            terminalTimeouts.push(loopTimeout);
+                        }
+                    }, line.delay);
+                    terminalTimeouts.push(timeoutId);
+                }
+            }
+            processNextLine();
+        }
+
+        function stopTerminalAnimation() {
+            if (typeof terminalTimeouts !== 'undefined' && terminalTimeouts.length > 0) {
+                terminalTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+                terminalTimeouts = [];
+            }
+        }
+
+        startTerminalAnimation();
+
+        function showToast(type) {
+            const toast = document.getElementById('toastNotification');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastText = document.getElementById('toastText');
+            
+            if (type === 'bitcoin') {
+                toastIcon.textContent = '₿';
+                toastIcon.className = 'toast-icon bitcoin';
+                toastText.textContent = 'COPY BITCOIN';
+            } else if (type === 'discord') {
+                toastIcon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>';
+                toastIcon.className = 'toast-icon discord';
+                toastText.textContent = 'COPY DISCORD';
+            }
+            
+            toast.classList.add('show');
+            
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showBtcAddress() {
+            const placeholder = document.getElementById('btcPlaceholder');
+            const address = document.getElementById('btcAddress');
+            
+            if (address.classList.contains('show')) {
+                // Already shown, copy and show in popup
+                navigator.clipboard.writeText('bc1qj3dfzn7la7yzfzejqzsanha28h7aqssqw0ycy4').then(() => {
+                    showToast('bitcoin');
+                    showLink('bc1qj3dfzn7la7yzfzejqzsanha28h7aqssqw0ycy4', 'Bitcoin Address');
+                });
+            } else {
+                // Show address
+                placeholder.style.display = 'none';
+                address.classList.add('show');
+                
+                // Auto copy to clipboard
+                navigator.clipboard.writeText('bc1qj3dfzn7la7yzfzejqzsanha28h7aqssqw0ycy4').then(() => {
+                    showToast('bitcoin');
+                    setTimeout(() => {
+                        showLink('bc1qj3dfzn7la7yzfzejqzsanha28h7aqssqw0ycy4', 'Bitcoin Address');
+                    }, 500);
+                });
+            }
+        }
+
+        function showLink(link, label) {
+            const display = document.getElementById('linkDisplay');
+            const content = document.getElementById('linkDisplayContent');
+            content.textContent = link;
+            display.classList.add('show');
+            
+            // Auto copy to clipboard
+            navigator.clipboard.writeText(link).then(() => {
+                content.textContent = link + '\n\n✓ Copied to clipboard!';
+            });
+        }
+
+        function closeLinkDisplay() {
+            const display = document.getElementById('linkDisplay');
+            display.classList.remove('show');
+        }
+
+        function openDiscord() {
+            // Discord invite link - replace with your actual Discord invite
+            const discordLink = 'https://discord.gg/YXjJKU6HqE'; // Replace with your Discord invite
+            
+            navigator.clipboard.writeText(discordLink).then(() => {
+                showToast('discord');
+                showLink(discordLink, 'Discord Invite');
+            });
+            
+            // Optionally open Discord directly
+            // window.open(discordLink, '_blank');
+        }
+
+        // Close link display when clicking outside
+        document.addEventListener('click', (e) => {
+            const display = document.getElementById('linkDisplay');
+            if (e.target === display || display.contains(e.target)) {
+                return;
+            }
+            if (display.classList.contains('show')) {
+                closeLinkDisplay();
+            }
+        });
+
+        // Typing effect for subtitle
+        const texts = [
+            'Albania Developer',
+            '20 years old',
+            'HACKER',
+            'Video Editor',
+            'Taste.Sys',
+            'UD.Sys',
+            'Fully UD'
+        ];
+
+        let currentTextIndex = 0;
+        let currentCharIndex = 0;
+        let isDeleting = false;
+        const typingElement = document.getElementById('typingText');
+
+        function typeText() {
+            const currentText = texts[currentTextIndex];
+            
+            if (!isDeleting && currentCharIndex < currentText.length) {
+                typingElement.textContent = currentText.substring(0, currentCharIndex + 1);
+                currentCharIndex++;
+                setTimeout(typeText, 100);
+            } else if (isDeleting && currentCharIndex > 0) {
+                typingElement.textContent = currentText.substring(0, currentCharIndex - 1);
+                currentCharIndex--;
+                setTimeout(typeText, 50);
+            } else if (!isDeleting && currentCharIndex === currentText.length) {
+                // Wait before deleting
+                setTimeout(() => {
+                    isDeleting = true;
+                    typeText();
+                }, 2000);
+            } else if (isDeleting && currentCharIndex === 0) {
+                // Move to next text
+                isDeleting = false;
+                currentTextIndex = (currentTextIndex + 1) % texts.length;
+                setTimeout(typeText, 300);
+            }
+        }
+
+        // Start typing effect only when main content is shown
+        let typingStarted = false;
+        
+        function startTyping() {
+            if (!typingStarted) {
+                typingStarted = true;
+                typeText();
+            }
+        }
+
+        // Function to start the experience
+        function startExperience() {
+            const preloader = document.getElementById('preloader');
+            const mainContent = document.getElementById('mainContent');
+            const audioPlayer = document.getElementById('audioPlayer');
+            
+            // Stop hacker animations
+            stopTerminalAnimation();
+            hackerCanvas.style.display = 'none';
+            
+            // Hide preloader
+            preloader.classList.add('hidden');
+            
+            // Show main content
+            setTimeout(() => {
+                mainContent.classList.add('show');
+                startTyping();
+                
+                // Start particle animation
+                initParticles();
+                animate();
+                
+                // Start matrix rain animation
+                animateMatrix();
+            }, 300);
+            
+            // Play audio with reverb effect
+            if (audioPlayer) {
+                setupAudioWithReverb();
+            }
+        }
+
+        // Audio Context and Reverb Setup
+        let audioContext;
+        let audioBuffer;
+        let audioSource;
+        let reverbGain;
+        let dryGain;
+        let convolver;
+        let isPlaying = false;
+
+        function createReverbImpulse(audioContext, duration, decay, reverse) {
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioContext.createBuffer(2, length, sampleRate);
+            const leftChannel = impulse.getChannelData(0);
+            const rightChannel = impulse.getChannelData(1);
+
+            for (let i = 0; i < length; i++) {
+                const n = reverse ? length - i : i;
+                leftChannel[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+                rightChannel[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+            }
+
+            return impulse;
+        }
+
+        async function loadAudioBuffer(url) {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                return await audioContext.decodeAudioData(arrayBuffer);
+            } catch (error) {
+                console.error('Error loading audio:', error);
+                throw error;
+            }
+        }
+
+        function playAudioWithReverb() {
+            if (!audioBuffer || isPlaying) return;
+            
+            // Create new source node
+            audioSource = audioContext.createBufferSource();
+            audioSource.buffer = audioBuffer;
+            audioSource.loop = true;
+            
+            // Create gain nodes for dry (original) and wet (reverb) signals
+            dryGain = audioContext.createGain();
+            reverbGain = audioContext.createGain();
+            
+            // Create convolver for reverb
+            convolver = audioContext.createConvolver();
+            
+            // Generate impulse response for reverb (2 seconds, decay of 2)
+            const impulse = createReverbImpulse(audioContext, 2, 2, false);
+            convolver.buffer = impulse;
+            
+            // Set reverb mix to 50% (0.5)
+            const reverbMix = 0.2;
+            dryGain.gain.value = 1 - reverbMix; // 50% dry
+            reverbGain.gain.value = reverbMix; // 50% wet
+            
+            // Create splitter to send signal to both dry and wet paths
+            const splitter = audioContext.createChannelSplitter(2);
+            const merger = audioContext.createChannelMerger(2);
+            
+            // Connect audio source to splitter
+            audioSource.connect(splitter);
+            
+            // Connect splitter to dry gain (direct path)
+            splitter.connect(dryGain, 0);
+            splitter.connect(dryGain, 1);
+            
+            // Connect splitter to convolver (reverb path)
+            splitter.connect(convolver, 0);
+            splitter.connect(convolver, 1);
+            
+            // Connect convolver to reverb gain
+            convolver.connect(reverbGain);
+            
+            // Connect both dry and wet signals to merger
+            dryGain.connect(merger, 0, 0);
+            dryGain.connect(merger, 0, 1);
+            reverbGain.connect(merger, 0, 0);
+            reverbGain.connect(merger, 0, 1);
+            
+            // Connect merger to destination
+            merger.connect(audioContext.destination);
+            
+            // Start playback
+            audioSource.start(0);
+            isPlaying = true;
+            
+            // Handle end event for looping
+            audioSource.onended = () => {
+                isPlaying = false;
+                if (audioSource.loop) {
+                    playAudioWithReverb();
+                }
+            };
+        }
+
+        async function setupAudioWithReverb() {
+            // Create or resume AudioContext
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Resume audio context if suspended (required by some browsers)
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            // Load audio file if not already loaded
+            if (!audioBuffer) {
+                try {
+                    const audioUrl = 'focus.mp3';
+                    audioBuffer = await loadAudioBuffer(audioUrl);
+                } catch (error) {
+                    console.error('Failed to load audio:', error);
+                    // Fallback to regular audio player if Web Audio API fails
+                    const audioPlayer = document.getElementById('audioPlayer');
+                    audioPlayer.play().catch(err => {
+                        console.log('Audio play failed:', err);
+                    });
+                    return;
+                }
+            }
+            
+            // Play audio with reverb
+            playAudioWithReverb();
+        }
+    </script>
+</body>
+</html>
